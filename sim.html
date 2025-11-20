@@ -204,20 +204,22 @@
     const smoothSlider = document.getElementById("smoothSlider");
     const smoothLabel = document.getElementById("smoothLabel");
 
-    const MAX_TIME = 10; // seconds
-    const N_UNIFORM = 200; // samples on uniform grid
+    // We'll treat the x-axis as time from 0 to 10 seconds
+    const MAX_TIME = 10;
 
+    // Store drawn points (array of {x, y} in canvas pixels)
     let posPoints = [];
     let drawing = false;
 
-    // Smoothing presets (Savitzky–Golay + kernel bandwidth)
+    // Smoothing level from slider (0..4)
     let smoothingLevel = parseInt(smoothSlider.value, 10);
+
     const sgLevels = [
-      { label: "Very light", window: 5,  bandwidth: 0.03 },
-      { label: "Light",      window: 7,  bandwidth: 0.05 },
-      { label: "Medium",     window: 9,  bandwidth: 0.07 },
-      { label: "Strong",     window: 11, bandwidth: 0.09 },
-      { label: "Max",        window: 11, bandwidth: 0.12 },
+      { label: "Off", window: 1 },
+      { label: "Light (5-pt)", window: 5 },
+      { label: "Medium (7-pt)", window: 7 },
+      { label: "Strong (9-pt)", window: 9 },
+      { label: "Max (11-pt)", window: 11 },
     ];
 
     function updateSmoothLabel() {
@@ -240,7 +242,7 @@
       };
     }
 
-    // Simple moving-average smoother for velocity
+    // Simple moving-average smoother (still used on velocity)
     function smoothArray(arr, windowSize) {
       if (arr.length <= 2 || windowSize <= 1) return arr.slice();
       const smoothed = [];
@@ -268,10 +270,12 @@
       const cfg = sgLevels[level] || sgLevels[0];
       const window = cfg.window;
 
+      // Level 0 -> no smoothing
       if (window <= 1 || n < window) {
         return data.slice();
       }
 
+      // Precomputed SG coefficients for poly order = 2, window sizes 5,7,9,11
       let coeffs;
       if (window === 5) {
         coeffs = [-0.08571429, 0.34285714, 0.48571429, 0.34285714, -0.08571429];
@@ -289,6 +293,7 @@
           -0.08391608
         ];
       } else {
+        // Fallback: no smoothing if window is unexpected
         return data.slice();
       }
 
@@ -300,6 +305,7 @@
         for (let j = 0; j < window; j++) {
           const offset = j - half;
           let idx = i + offset;
+          // Clamp at boundaries
           if (idx < 0) idx = 0;
           if (idx >= n) idx = n - 1;
           acc += coeffs[j] * data[idx];
@@ -310,47 +316,7 @@
       return out;
     }
 
-    // Kernel smoothing: resample positions onto uniform time grid
-    function kernelSmoothResample(times, positions, tUniform, bandwidth) {
-      const nSamples = tUniform.length;
-      const n = times.length;
-      const out = new Array(nSamples);
-
-      if (n === 0) return out.fill(0);
-
-      const bw = bandwidth;
-      const bw3 = 3 * bw;
-
-      for (let i = 0; i < nSamples; i++) {
-        const t0 = tUniform[i];
-        let num = 0;
-        let den = 0;
-
-        for (let j = 0; j < n; j++) {
-          const dt = times[j] - t0;
-          const adt = Math.abs(dt);
-          if (adt > bw3) continue;
-          const w = Math.exp(-(dt * dt) / (2 * bw * bw));
-          num += w * positions[j];
-          den += w;
-        }
-
-        if (den === 0) {
-          // fallback: nearest neighbor or previous
-          if (i === 0) {
-            out[i] = positions[0];
-          } else {
-            out[i] = out[i - 1];
-          }
-        } else {
-          out[i] = num / den;
-        }
-      }
-
-      return out;
-    }
-
-    // Draw axes & grid
+    // Draw axes & grid for a given canvas/context
     function drawAxes(ctx, canvas, options = {}) {
       const w = canvas.width;
       const h = canvas.height;
@@ -367,6 +333,7 @@
       ctx.save();
       ctx.lineWidth = 1;
 
+      // Grid vertical lines (time divisions)
       ctx.strokeStyle = gridColor;
       ctx.beginPath();
       for (let i = 1; i < numXGrid; i++) {
@@ -375,6 +342,7 @@
         ctx.lineTo(x, h);
       }
 
+      // Grid horizontal lines
       for (let j = 1; j < numYGrid; j++) {
         const y = (j / numYGrid) * h;
         ctx.moveTo(0, y);
@@ -382,13 +350,16 @@
       }
       ctx.stroke();
 
+      // Axes: time (x) and vertical axis in center
       ctx.strokeStyle = axisColor;
 
+      // x-axis – bottom
       ctx.beginPath();
       ctx.moveTo(0, h - 20);
       ctx.lineTo(w, h - 20);
       ctx.stroke();
 
+      // y-axis – left
       ctx.beginPath();
       ctx.moveTo(40, 0);
       ctx.lineTo(40, h);
@@ -432,6 +403,7 @@
       const last = posPoints[posPoints.length - 1];
       posPoints.push({ x, y });
 
+      // Draw incremental segment for responsiveness
       posCtx.save();
       posCtx.lineWidth = 2;
       posCtx.strokeStyle = "#2563eb";
@@ -448,19 +420,19 @@
       }
     });
 
-    // ====== COMPUTE VELOCITY ======
+    // ====== COMPUTE VELOCITY FROM POSITION ======
     function computeVelocity() {
       if (posPoints.length < 2) {
         alert("Draw a position–time graph first.");
         return;
       }
 
-      // 1. Sort by time (x)
+      // 1. Sort points by time (x coordinate)
       let pts = posPoints.slice().sort((a, b) => a.x - b.x);
 
-      // 2. Filter points that are too close in x
+      // 2. Remove points that are extremely close in x to avoid dt ≈ 0
       const filtered = [];
-      const minDx = 4;
+      const minDx = 4; // pixels (less sensitive to tiny jitter)
       for (let p of pts) {
         if (
           filtered.length === 0 ||
@@ -476,60 +448,76 @@
         return;
       }
 
+      // 3. Convert pixel x to time (0..MAX_TIME),
+      //    and pixel y to position (invert Y so up is positive).
       const w = posCanvas.width;
       const h = posCanvas.height;
 
       const times = pts.map((p) => (p.x / w) * MAX_TIME);
-      const positionsRaw = pts.map((p) => (h - p.y) / h * 10); // arbitrary units
+      const positionsRaw = pts.map((p) => (h - p.y) / h * 10); // arbitrary 0..10 units
 
-      // 3. Resample onto a uniform time grid with kernel smoothing
-      const cfg = sgLevels[smoothingLevel];
-      const bandwidth = cfg.bandwidth * MAX_TIME;
+      // 3.5 Savitzky–Golay smoothing on position (before differentiation)
+      const positions = savitzkyGolaySmooth(positionsRaw, smoothingLevel);
 
-      const tUniform = [];
-      for (let i = 0; i < N_UNIFORM; i++) {
-        tUniform.push((i / (N_UNIFORM - 1)) * MAX_TIME);
-      }
+      // 4. Approximate derivative using 5-point central difference (radius 2)
+      const velocities = [];
+      const vTimes = [];
 
-      const kernelSmoothed = kernelSmoothResample(
-        times,
-        positionsRaw,
-        tUniform,
-        bandwidth
-      );
-
-      // 4. Savitzky–Golay smoothing on the uniform positions
-      const sgPositions = savitzkyGolaySmooth(kernelSmoothed, smoothingLevel);
-
-      // 5. Central difference derivative on the uniform grid
-      const dt = tUniform[1] - tUniform[0];
-      const velocities = new Array(N_UNIFORM);
-
-      for (let i = 0; i < N_UNIFORM; i++) {
+      for (let i = 0; i < pts.length; i++) {
         let v;
-        if (i === 0) {
-          v = (sgPositions[1] - sgPositions[0]) / dt;
-        } else if (i === N_UNIFORM - 1) {
-          v = (sgPositions[N_UNIFORM - 1] - sgPositions[N_UNIFORM - 2]) / dt;
+
+        if (i >= 2 && i <= pts.length - 3) {
+          // 5-point stencil in the interior
+          const dtSpan = times[i + 2] - times[i - 2]; // span across ~4h
+          if (dtSpan === 0) continue;
+
+          // f'(xi) ≈ [-f(i+2) + 8f(i+1) - 8f(i-1) + f(i-2)] / (12h)
+          // with h ≈ dtSpan / 4 => denominator = 3 * dtSpan
+          const num =
+            -positions[i + 2] +
+            8 * positions[i + 1] -
+            8 * positions[i - 1] +
+            positions[i - 2];
+
+          v = num / (3 * dtSpan);
+        } else if (i === 1 || i === pts.length - 2) {
+          // 3-point central difference near boundaries
+          const dt = times[i + 1] - times[i - 1];
+          if (dt === 0) continue;
+          v = (positions[i + 1] - positions[i - 1]) / dt;
         } else {
-          v = (sgPositions[i + 1] - sgPositions[i - 1]) / (2 * dt);
+          // Forward/backward difference at very ends
+          const j = i === 0 ? i : i - 1;
+          const dt = times[j + 1] - times[j];
+          if (dt === 0) continue;
+          v = (positions[j + 1] - positions[j]) / dt;
         }
-        velocities[i] = v;
+
+        velocities.push(v);
+        vTimes.push(times[i]);
       }
 
-      // 6. Extra smoothing on velocity (small moving average)
-      const smoothedVelocities = smoothArray(velocities, 7);
+      if (velocities.length < 2) {
+        alert("Not enough data to compute velocity. Try drawing a smoother, longer curve.");
+        return;
+      }
 
-      drawVelocityGraph(tUniform, smoothedVelocities);
+      // 5. Smooth velocity data to reduce residual spikes
+      const smoothedVelocities = smoothArray(velocities, 5); // windowSize = 5 points
+
+      // 6. Draw velocity–time graph
+      drawVelocityGraph(vTimes, smoothedVelocities);
     }
 
     function drawVelocityGraph(times, velocities) {
       const w = velCanvas.width;
       const h = velCanvas.height;
 
+      // Find range of velocities
       let minV = Math.min(...velocities);
       let maxV = Math.max(...velocities);
 
+      // Avoid degenerate case (all same)
       if (minV === maxV) {
         const pad = Math.abs(minV) || 1;
         minV -= pad;
@@ -539,16 +527,18 @@
       const timeMax = MAX_TIME;
 
       function tToX(t) {
-        return (t / timeMax) * (w - 60) + 40;
+        return (t / timeMax) * (w - 60) + 40; // leave margin for y-axis
       }
 
       function vToY(v) {
         const ratio = (v - minV) / (maxV - minV);
-        return h - 20 - ratio * (h - 40);
+        return h - 20 - ratio * (h - 40); // leave margins top/bottom
       }
 
+      // Clear & axes
       velCtx.clearRect(0, 0, w, h);
 
+      // Light grid
       velCtx.save();
       velCtx.lineWidth = 1;
       velCtx.strokeStyle = "#e5e7eb";
@@ -570,13 +560,16 @@
       }
       velCtx.stroke();
 
+      // Axes
       velCtx.strokeStyle = "#111827";
 
+      // y-axis
       velCtx.beginPath();
       velCtx.moveTo(40, 0);
       velCtx.lineTo(40, h);
       velCtx.stroke();
 
+      // x-axis at v=0 if in range; otherwise bottom
       let zeroY;
       if (minV <= 0 && maxV >= 0) {
         zeroY = vToY(0);
@@ -588,14 +581,17 @@
       velCtx.lineTo(w, zeroY);
       velCtx.stroke();
 
+      // Labels (simple, numeric ticks)
       velCtx.fillStyle = "#374151";
       velCtx.font = "10px system-ui";
 
+      // Time labels (0, 2, 4, 6, 8, 10)
       for (let t = 0; t <= timeMax; t += 2) {
         const x = tToX(t);
         velCtx.fillText(t.toString(), x - 4, h - 5);
       }
 
+      // Velocity labels (min, mid, max)
       const midV = (minV + maxV) / 2;
       const vTicks = [minV, midV, maxV];
       vTicks.forEach((v) => {
@@ -603,6 +599,7 @@
         velCtx.fillText(v.toFixed(1), 4, y + 3);
       });
 
+      // Plot velocity polyline
       velCtx.lineWidth = 2;
       velCtx.strokeStyle = "#22c55e";
       velCtx.beginPath();
