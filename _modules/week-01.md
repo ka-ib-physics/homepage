@@ -1,23 +1,27 @@
 ---
-title: Introduction to Java
+title: IBDP Physics Lessons
 ---
 
-Sep 28
-: [Java & Git](#)
-  : [1.1](#)
+Nov 15  
+:L0 - Course Introduction and Diagnostic Exam
+  
+Nov 18  
+:L1 - Introduction to Kinematics at constant velocity
 
-Sep 29
-: **Section**{: .label .label-purple }[Intro to Java](#)
-  : [Solution](#)
+Nov 22  
+:L2 - Continued kinematics at a constant velocity
 
-Sep 30
-: [Variables & Objects](#)
-  : [1.2](#), [2.1](#)
+Nov 25  
+:L3 - Acceleration and constant-acceleration kinematics
 
-Oct 1
-: **Lab**{: .label .label-purple } [Intro to Java](#)
+Nov 28  
+:L4 - Net force and Newton’s laws, FBDs, and weight
 
-Oct 2
-: [Tracing, IntLists, & Recursion](#)
-  : [2.1](#)
-: **HW 1 due**{: .label .label-red }
+Dec 2  
+:L5 - Static and kinetic friction; Introduction to energy
+
+Dec 5  
+:L6 - Work and Power
+
+Dec 9  
+:L7 - Momentum Conservation
