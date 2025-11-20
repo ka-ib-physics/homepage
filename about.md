@@ -6,7 +6,7 @@ description: >-
 ---
 
 # Assignments Folder
-https://drive.google.com/drive/folders/1mnfjJghEDVlabmmVAtcLkIGh5ThcYdKX?usp=sharing
+[https://drive.google.com/drive/folders/1mnfjJghEDVlabmmVAtcLkIGh5ThcYdKX?usp=sharing](https://drive.google.com/drive/folders/1mnfjJghEDVlabmmVAtcLkIGh5ThcYdKX?usp=sharing)
 
 # Assignment 1 - Lecture 1 and 2 content
 Homework 1 tests the following concepts:
