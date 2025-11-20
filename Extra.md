@@ -4,10 +4,10 @@ title: Extra
 description: Extra Material.
 ---
 
-{% raw %}
+
 ## Pos - Time Graph Widget
 
-
+```html
 <script>
 document.addEventListener('DOMContentLoaded', function () {
   // ====== Simple Position->Velocity Simulation (JavaScript) ======
@@ -212,5 +212,5 @@ document.addEventListener('DOMContentLoaded', function () {
   resetBtn.addEventListener('click', resetAll);
 });
 </script>
-{% endraw %}
+
 
