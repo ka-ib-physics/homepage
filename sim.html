@@ -241,7 +241,7 @@
       }
       ctx.stroke();
 
-      // Axes: time (x) and vertical axis in center
+      // Axes: time (x) and vertical axis
       ctx.strokeStyle = axisColor;
 
       // x-axis – bottom
@@ -359,9 +359,8 @@
           const dtSpan = times[i + 2] - times[i - 2]; // span across 4h
           if (dtSpan === 0) continue;
 
-          // For uneven spacing, treat h ≈ dtSpan / 4
           // f'(xi) ≈ [-f(i+2) + 8f(i+1) - 8f(i-1) + f(i-2)] / (12h)
-          // => denominator = 3 * dtSpan
+          // with h ≈ dtSpan / 4 => denominator = 3 * dtSpan
           const num =
             -positions[i + 2] +
             8 * positions[i + 1] -
@@ -402,6 +401,9 @@
       const w = velCanvas.width;
       const h = velCanvas.height;
 
+      // Use the same axes/grid as the position graph
+      drawAxes(velCtx, velCanvas);
+
       // Find range of velocities
       let minV = Math.min(...velocities);
       let maxV = Math.max(...velocities);
@@ -415,80 +417,19 @@
 
       const timeMax = MAX_TIME;
 
+      // IMPORTANT: same time→x mapping as in the top graph:
+      // time 0 → x = 0, time MAX_TIME → x = canvas width
       function tToX(t) {
-        return (t / timeMax) * (w - 60) + 40; // leave margin for y-axis
+        return (t / timeMax) * w;
       }
 
       function vToY(v) {
         const ratio = (v - minV) / (maxV - minV);
-        return h - 20 - ratio * (h - 40); // leave margins top/bottom
+        return h - 20 - ratio * (h - 40); // keep same vertical margins as axes
       }
-
-      // Clear & axes
-      velCtx.clearRect(0, 0, w, h);
-
-      // Light grid
-      velCtx.save();
-      velCtx.lineWidth = 1;
-      velCtx.strokeStyle = "#e5e7eb";
-
-      const numXGrid = 10;
-      const numYGrid = 6;
-
-      velCtx.beginPath();
-      for (let i = 1; i < numXGrid; i++) {
-        const x = (i / numXGrid) * (w - 60) + 40;
-        velCtx.moveTo(x, 0);
-        velCtx.lineTo(x, h);
-      }
-
-      for (let j = 1; j < numYGrid; j++) {
-        const y = (j / numYGrid) * (h - 40) + 10;
-        velCtx.moveTo(0, y);
-        velCtx.lineTo(w, y);
-      }
-      velCtx.stroke();
-
-      // Axes
-      velCtx.strokeStyle = "#111827";
-
-      // y-axis
-      velCtx.beginPath();
-      velCtx.moveTo(40, 0);
-      velCtx.lineTo(40, h);
-      velCtx.stroke();
-
-      // x-axis at v=0 if in range; otherwise bottom
-      let zeroY;
-      if (minV <= 0 && maxV >= 0) {
-        zeroY = vToY(0);
-      } else {
-        zeroY = h - 20;
-      }
-      velCtx.beginPath();
-      velCtx.moveTo(0, zeroY);
-      velCtx.lineTo(w, zeroY);
-      velCtx.stroke();
-
-      // Labels (simple, numeric ticks)
-      velCtx.fillStyle = "#374151";
-      velCtx.font = "10px system-ui";
-
-      // Time labels (0, 2, 4, 6, 8, 10)
-      for (let t = 0; t <= timeMax; t += 2) {
-        const x = tToX(t);
-        velCtx.fillText(t.toString(), x - 4, h - 5);
-      }
-
-      // Velocity labels (min, mid, max)
-      const midV = (minV + maxV) / 2;
-      const vTicks = [minV, midV, maxV];
-      vTicks.forEach((v) => {
-        const y = vToY(v);
-        velCtx.fillText(v.toFixed(1), 4, y + 3);
-      });
 
       // Plot velocity polyline
+      velCtx.save();
       velCtx.lineWidth = 2;
       velCtx.strokeStyle = "#22c55e";
       velCtx.beginPath();
@@ -499,7 +440,6 @@
         else velCtx.lineTo(x, y);
       });
       velCtx.stroke();
-
       velCtx.restore();
     }
 
