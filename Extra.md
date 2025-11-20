@@ -19,15 +19,11 @@ description: Extra Material.
         Hint: time increases to the right, position increases upward. Click and drag to draw.
       </p>
     </div>
-
-    <!-- Controls -->
     <div style="display:flex; gap:0.5rem; align-items:center;">
       <button id="computeBtn">Compute velocity</button>
       <button id="resetBtn">Reset</button>
       <span id="statusMsg" style="font-size:0.9rem; color:#555;"></span>
     </div>
-
-    <!-- Velocity canvas -->
     <div>
       <h3>Velocity vs Time</h3>
       <canvas id="velCanvas" width="800" height="300" style="border:1px solid #ccc;"></canvas>
