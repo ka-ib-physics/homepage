@@ -137,7 +137,7 @@
         <span>Horizontal axis: time &nbsp;|&nbsp; Vertical axis: position</span>
       </div>
       <canvas id="positionCanvas" width="800" height="280"></canvas>
-      <div class="legend">Draw with mouse (click & drag)</div>
+      <div class="legend">Draw with mouse (click &amp; drag)</div>
     </div>
 
     <div class="controls">
@@ -184,6 +184,27 @@
         x: evt.clientX - rect.left,
         y: evt.clientY - rect.top
       };
+    }
+
+    // Moving-average smoother
+    function smoothArray(arr, windowSize) {
+      if (arr.length <= 2 || windowSize <= 1) return arr.slice();
+      const smoothed = [];
+      const half = Math.floor(windowSize / 2);
+
+      for (let i = 0; i < arr.length; i++) {
+        let start = Math.max(0, i - half);
+        let end = Math.min(arr.length - 1, i + half);
+        let sum = 0;
+        let count = 0;
+
+        for (let j = start; j <= end; j++) {
+          sum += arr[j];
+          count++;
+        }
+        smoothed.push(sum / count);
+      }
+      return smoothed;
     }
 
     // Draw axes & grid for a given canvas/context
@@ -302,7 +323,7 @@
 
       // 2. Remove points that are extremely close in x to avoid dt ≈ 0
       const filtered = [];
-      const minDx = 1; // pixels
+      const minDx = 4; // pixels (less sensitive to tiny jitter)
       for (let p of pts) {
         if (
           filtered.length === 0 ||
@@ -314,7 +335,7 @@
 
       pts = filtered;
       if (pts.length < 2) {
-        alert("The drawing is too short or vertical; try a smoother, longer curve.");
+        alert("The drawing is too short or almost vertical; try a smoother, longer curve.");
         return;
       }
 
@@ -354,8 +375,11 @@
         return;
       }
 
-      // 5. Draw velocity–time graph
-      drawVelocityGraph(vTimes, velocities);
+      // 5. Smooth velocity data to reduce spikes
+      const smoothedVelocities = smoothArray(velocities, 5); // windowSize = 5 points
+
+      // 6. Draw velocity–time graph
+      drawVelocityGraph(vTimes, smoothedVelocities);
     }
 
     function drawVelocityGraph(times, velocities) {
