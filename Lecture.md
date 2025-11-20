@@ -6,3 +6,4 @@ Here you can find lecture notes and other resources
 
 
 # Recommended Textbook
+[https://drive.google.com/drive/folders/1tzeEwK2dR0cIjgEJHeEkFgj55K8i_PqX?usp=drive_link](https://drive.google.com/drive/folders/1tzeEwK2dR0cIjgEJHeEkFgj55K8i_PqX?usp=drive_link)
