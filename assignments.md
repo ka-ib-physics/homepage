@@ -17,6 +17,8 @@ Homework 1 tests the following concepts:
 * Reference Frame
 * Distance/Position/Speed/Velocity - Time plots (constant velocity only)
 
+<details>
+  <summary>Show HW 1 (click to expand)</summary>
   <div style="margin-top: 1rem;">
     <iframe
       src="/homepage/assets/pdfs/IBDP_Physics_Homework_1.pdf"
