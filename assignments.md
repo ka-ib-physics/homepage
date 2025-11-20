@@ -28,11 +28,7 @@ Homework 1 tests the following concepts:
   </div>
 </details>
 
-<iframe
-  src="/homepage/assets/pdfs/IBDP_Physics_Homework_1.pdf" 
-  width="100%" 
-  height="600px">
- </iframe>
+
 
   
 
