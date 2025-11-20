@@ -16,12 +16,12 @@ schedule:
       - name: Lecture
         start: 11:00 AM
         end: 12:15 PM
-        location: TBA
+        location: B9 R3220
 
   - name: Tuesday
     events:
       - name: Lecture
         start: 1:45 PM
         end: 2:45 PM
-        location: TBA
+        location: B9 R3220
 ---
