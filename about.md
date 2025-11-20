@@ -2,14 +2,8 @@
 layout: page
 title: Assignments
 description: >-
-    Course policies and information.
+    Course Assignment Info.
 ---
-
-# About
-{:.no_toc}
-
-## Table of contents
-{: .no_toc .text-delta }
 
 # Assignments Folder
 https://drive.google.com/drive/folders/1mnfjJghEDVlabmmVAtcLkIGh5ThcYdKX?usp=sharing
