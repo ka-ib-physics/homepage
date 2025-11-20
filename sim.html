@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Position–Time to Velocity–Time Simulator</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    p.description {
+      max-width: 800px;
+      margin: 0 auto 20px;
+      text-align: center;
+      font-size: 0.95rem;
+      color: #555;
+    }
+
+    .container {
+      max-width: 840px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 16px 16px 24px;
+      border-radius: 12px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+    }
+
+    .canvas-wrapper {
+      margin-bottom: 16px;
+    }
+
+    .canvas-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 4px;
+    }
+
+    .canvas-header h2 {
+      font-size: 1.05rem;
+      margin: 0;
+    }
+
+    .canvas-header span {
+      font-size: 0.8rem;
+      color: #777;
+    }
+
+    canvas {
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background: #fafafa;
+      cursor: crosshair;
+      display: block;
+    }
+
+    #velocityCanvas {
+      cursor: default;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin: 10px 0 18px;
+    }
+
+    button {
+      border-radius: 999px;
+      border: none;
+      padding: 8px 16px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      background: #2563eb;
+      color: white;
+      font-weight: 500;
+      box-shadow: 0 2px 6px rgba(37,99,235,0.25);
+      transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.08s ease;
+    }
+
+    button.secondary {
+      background: #e5e7eb;
+      color: #111827;
+      box-shadow: none;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 10px rgba(37,99,235,0.3);
+    }
+
+    button.secondary:hover {
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    button:active {
+      transform: translateY(0);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+    }
+
+    .hint {
+      font-size: 0.8rem;
+      color: #6b7280;
+      text-align: center;
+      margin-top: 4px;
+    }
+
+    .legend {
+      font-size: 0.8rem;
+      color: #6b7280;
+      text-align: right;
+      margin-top: 2px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Position–Time → Velocity–Time</h1>
+  <p class="description">
+    Draw any position–time graph in the top canvas with your mouse. Then click
+    <strong>Compute Velocity</strong> to see an approximate velocity–time graph below.
+  </p>
+
+  <div class="container">
+    <div class="canvas-wrapper">
+      <div class="canvas-header">
+        <h2>Position vs Time</h2>
+        <span>Horizontal axis: time &nbsp;|&nbsp; Vertical axis: position</span>
+      </div>
+      <canvas id="positionCanvas" width="800" height="280"></canvas>
+      <div class="legend">Draw with mouse (click & drag)</div>
+    </div>
+
+    <div class="controls">
+      <button id="computeBtn">Compute Velocity</button>
+      <button id="clearBtn" class="secondary">Clear All</button>
+    </div>
+
+    <div class="canvas-wrapper">
+      <div class="canvas-header">
+        <h2>Velocity vs Time</h2>
+        <span>Horizontal axis: time &nbsp;|&nbsp; Vertical axis: velocity</span>
+      </div>
+      <canvas id="velocityCanvas" width="800" height="280"></canvas>
+      <div class="legend">Resulting velocity–time graph</div>
+    </div>
+
+    <div class="hint">
+      Hint: A straight, increasing line in position–time should give a constant (flat) velocity line.
+    </div>
+  </div>
+
+  <script>
+    // ====== BASIC SETUP ======
+    const posCanvas = document.getElementById("positionCanvas");
+    const posCtx = posCanvas.getContext("2d");
+
+    const velCanvas = document.getElementById("velocityCanvas");
+    const velCtx = velCanvas.getContext("2d");
+
+    const computeBtn = document.getElementById("computeBtn");
+    const clearBtn = document.getElementById("clearBtn");
+
+    // We'll treat the x-axis as time from 0 to 10 seconds
+    const MAX_TIME = 10;
+
+    // Store drawn points (array of {x, y} in canvas pixels)
+    let posPoints = [];
+    let drawing = false;
+
+    // ====== UTILS ======
+    function getCanvasCoords(canvas, evt) {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: evt.clientX - rect.left,
+        y: evt.clientY - rect.top
+      };
+    }
+
+    // Draw axes & grid for a given canvas/context
+    function drawAxes(ctx, canvas, options = {}) {
+      const w = canvas.width;
+      const h = canvas.height;
+
+      ctx.clearRect(0, 0, w, h);
+
+      const {
+        gridColor = "#e5e7eb",
+        axisColor = "#111827",
+        numXGrid = 10,
+        numYGrid = 6
+      } = options;
+
+      ctx.save();
+      ctx.lineWidth = 1;
+
+      // Grid vertical lines (time divisions)
+      ctx.strokeStyle = gridColor;
+      ctx.beginPath();
+      for (let i = 1; i < numXGrid; i++) {
+        const x = (i / numXGrid) * w;
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, h);
+      }
+
+      // Grid horizontal lines
+      for (let j = 1; j < numYGrid; j++) {
+        const y = (j / numYGrid) * h;
+        ctx.moveTo(0, y);
+        ctx.lineTo(w, y);
+      }
+      ctx.stroke();
+
+      // Axes: time (x) and vertical axis in center
+      ctx.strokeStyle = axisColor;
+
+      // x-axis – bottom
+      ctx.beginPath();
+      ctx.moveTo(0, h - 20);
+      ctx.lineTo(w, h - 20);
+      ctx.stroke();
+
+      // y-axis – left
+      ctx.beginPath();
+      ctx.moveTo(40, 0);
+      ctx.lineTo(40, h);
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    function redrawPosition() {
+      drawAxes(posCtx, posCanvas);
+      if (posPoints.length < 2) return;
+      posCtx.save();
+      posCtx.lineWidth = 2;
+      posCtx.strokeStyle = "#2563eb";
+      posCtx.beginPath();
+      posPoints.forEach((p, i) => {
+        if (i === 0) posCtx.moveTo(p.x, p.y);
+        else posCtx.lineTo(p.x, p.y);
+      });
+      posCtx.stroke();
+      posCtx.restore();
+    }
+
+    function clearAll() {
+      posPoints = [];
+      drawAxes(posCtx, posCanvas);
+      drawAxes(velCtx, velCanvas);
+    }
+
+    // ====== DRAWING LOGIC ======
+    posCanvas.addEventListener("mousedown", (e) => {
+      drawing = true;
+      const { x, y } = getCanvasCoords(posCanvas, e);
+      posPoints.push({ x, y });
+      redrawPosition();
+    });
+
+    posCanvas.addEventListener("mousemove", (e) => {
+      if (!drawing) return;
+      const { x, y } = getCanvasCoords(posCanvas, e);
+      const last = posPoints[posPoints.length - 1];
+      posPoints.push({ x, y });
+
+      // Draw incremental segment for responsiveness
+      posCtx.save();
+      posCtx.lineWidth = 2;
+      posCtx.strokeStyle = "#2563eb";
+      posCtx.beginPath();
+      posCtx.moveTo(last.x, last.y);
+      posCtx.lineTo(x, y);
+      posCtx.stroke();
+      posCtx.restore();
+    });
+
+    window.addEventListener("mouseup", () => {
+      if (drawing) {
+        drawing = false;
+      }
+    });
+
+    // ====== COMPUTE VELOCITY FROM POSITION ======
+    function computeVelocity() {
+      if (posPoints.length < 2) {
+        alert("Draw a position–time graph first.");
+        return;
+      }
+
+      // 1. Sort points by time (x coordinate)
+      let pts = posPoints.slice().sort((a, b) => a.x - b.x);
+
+      // 2. Remove points that are extremely close in x to avoid dt ≈ 0
+      const filtered = [];
+      const minDx = 1; // pixels
+      for (let p of pts) {
+        if (
+          filtered.length === 0 ||
+          Math.abs(p.x - filtered[filtered.length - 1].x) >= minDx
+        ) {
+          filtered.push(p);
+        }
+      }
+
+      pts = filtered;
+      if (pts.length < 2) {
+        alert("The drawing is too short or vertical; try a smoother, longer curve.");
+        return;
+      }
+
+      // 3. Convert pixel x to time (0..MAX_TIME),
+      //    and pixel y to position (invert Y so up is positive).
+      const w = posCanvas.width;
+      const h = posCanvas.height;
+
+      const times = pts.map((p) => (p.x / w) * MAX_TIME);
+      const positions = pts.map((p) => (h - p.y) / h * 10); // arbitrary 0..10 "position units"
+
+      // 4. Approximate derivative using central differences
+      const velocities = [];
+      const vTimes = [];
+
+      for (let i = 0; i < pts.length; i++) {
+        let v;
+        if (i === 0) {
+          const dt = times[i + 1] - times[i];
+          if (dt === 0) continue;
+          v = (positions[i + 1] - positions[i]) / dt;
+        } else if (i === pts.length - 1) {
+          const dt = times[i] - times[i - 1];
+          if (dt === 0) continue;
+          v = (positions[i] - positions[i - 1]) / dt;
+        } else {
+          const dt = times[i + 1] - times[i - 1];
+          if (dt === 0) continue;
+          v = (positions[i + 1] - positions[i - 1]) / dt;
+        }
+        velocities.push(v);
+        vTimes.push(times[i]);
+      }
+
+      if (velocities.length < 2) {
+        alert("Not enough data to compute velocity. Try drawing a smoother, longer curve.");
+        return;
+      }
+
+      // 5. Draw velocity–time graph
+      drawVelocityGraph(vTimes, velocities);
+    }
+
+    function drawVelocityGraph(times, velocities) {
+      const w = velCanvas.width;
+      const h = velCanvas.height;
+
+      // Find range of velocities
+      let minV = Math.min(...velocities);
+      let maxV = Math.max(...velocities);
+
+      // Avoid degenerate case (all same)
+      if (minV === maxV) {
+        const pad = Math.abs(minV) || 1;
+        minV -= pad;
+        maxV += pad;
+      }
+
+      const timeMax = MAX_TIME;
+
+      function tToX(t) {
+        return (t / timeMax) * (w - 60) + 40; // leave margin for y-axis
+      }
+
+      function vToY(v) {
+        const ratio = (v - minV) / (maxV - minV);
+        return h - 20 - ratio * (h - 40); // leave margins top/bottom
+      }
+
+      // Clear & axes
+      velCtx.clearRect(0, 0, w, h);
+
+      // Light grid
+      velCtx.save();
+      velCtx.lineWidth = 1;
+      velCtx.strokeStyle = "#e5e7eb";
+
+      const numXGrid = 10;
+      const numYGrid = 6;
+
+      velCtx.beginPath();
+      for (let i = 1; i < numXGrid; i++) {
+        const x = (i / numXGrid) * (w - 60) + 40;
+        velCtx.moveTo(x, 0);
+        velCtx.lineTo(x, h);
+      }
+
+      for (let j = 1; j < numYGrid; j++) {
+        const y = (j / numYGrid) * (h - 40) + 10;
+        velCtx.moveTo(0, y);
+        velCtx.lineTo(w, y);
+      }
+      velCtx.stroke();
+
+      // Axes
+      velCtx.strokeStyle = "#111827";
+
+      // y-axis
+      velCtx.beginPath();
+      velCtx.moveTo(40, 0);
+      velCtx.lineTo(40, h);
+      velCtx.stroke();
+
+      // x-axis at v=0 if in range; otherwise bottom
+      let zeroY;
+      if (minV <= 0 && maxV >= 0) {
+        zeroY = vToY(0);
+      } else {
+        zeroY = h - 20;
+      }
+      velCtx.beginPath();
+      velCtx.moveTo(0, zeroY);
+      velCtx.lineTo(w, zeroY);
+      velCtx.stroke();
+
+      // Labels (simple, numeric ticks)
+      velCtx.fillStyle = "#374151";
+      velCtx.font = "10px system-ui";
+
+      // Time labels (0, 2, 4, 6, 8, 10)
+      for (let t = 0; t <= timeMax; t += 2) {
+        const x = tToX(t);
+        velCtx.fillText(t.toString(), x - 4, h - 5);
+      }
+
+      // Velocity labels (min, mid, max)
+      const midV = (minV + maxV) / 2;
+      const vTicks = [minV, midV, maxV];
+      vTicks.forEach((v) => {
+        const y = vToY(v);
+        velCtx.fillText(v.toFixed(1), 4, y + 3);
+      });
+
+      // Plot velocity polyline
+      velCtx.lineWidth = 2;
+      velCtx.strokeStyle = "#22c55e";
+      velCtx.beginPath();
+      times.forEach((t, i) => {
+        const x = tToX(t);
+        const y = vToY(velocities[i]);
+        if (i === 0) velCtx.moveTo(x, y);
+        else velCtx.lineTo(x, y);
+      });
+      velCtx.stroke();
+
+      velCtx.restore();
+    }
+
+    // ====== BUTTON HOOKS ======
+    computeBtn.addEventListener("click", computeVelocity);
+    clearBtn.addEventListener("click", clearAll);
+
+    // ====== INITIAL DRAW ======
+    drawAxes(posCtx, posCanvas);
+    drawAxes(velCtx, velCanvas);
+  </script>
+</body>
+</html>
