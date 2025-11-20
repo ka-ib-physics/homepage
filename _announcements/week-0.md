@@ -1,3 +1,9 @@
+---
+title: Week 1 Announcement
+week: 0
+date: 2019-04-08
+---
+
 # Week 0 Announcement – Welcome to IBDP Physics! 🎉
 
 Welcome to **IBDP Physics**!
