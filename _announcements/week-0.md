@@ -1,14 +1,14 @@
 ---
 title: Week 1 Announcement
-week: 0
+week: 1
 date: 2019-04-08
 ---
 
-# Week 0 Announcement – Welcome to IBDP Physics! 🎉
+# Week 1 Announcement – Welcome to IBDP Physics! 🎉
 
 Welcome to **IBDP Physics**!
 
-I’m excited to start this journey with you. Over the next two years, we’ll explore how the universe works, from the motion of everyday objects to the behavior of atoms and galaxies.
+I’m excited to start this journey with you. Over the upcoming period, we’ll explore how the universe works, from the motion of everyday objects to the behavior of atoms and galaxies.
 
 To help you stay organized, we’ll be using our course **website** as the main hub for everything. Please take a few minutes this week to explore it. Here’s how it’s structured:
 
@@ -54,7 +54,7 @@ To help you stay organized, we’ll be using our course **website** as the main 
 
 ---
 
-## ✅ What You Should Do in Week 0
+## ✅ What You Should Do in Week 1
 
 1. **Visit the course website** and bookmark it.  
 2. Explore:
@@ -64,6 +64,8 @@ To help you stay organized, we’ll be using our course **website** as the main 
    - **Lecture / Lesson Materials**
 3. Make sure you can access everything without issues.
 4. Bring any questions you have to our next class.
+5. Begin assignment 1, due next Tuesday
+   
 
 ---
 
