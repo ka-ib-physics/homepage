@@ -1,7 +1,7 @@
 ---
 layout: page
 title: Announcements
-nav_exclude: false
+nav_exclude: true
 description: A feed containing all of the class announcements.
 ---
 
