@@ -4,7 +4,7 @@ week: 1
 date: 2025-11-20
 ---
 
-# Week 1 Announcement – Welcome to IBDP Physics! 🎉
+# Week 1 Announcement – Welcome to IBDP Physics!
 
 Welcome to **IBDP Physics**!
 
@@ -70,4 +70,4 @@ To help you stay organized, we’ll be using our course **website** as the main 
 ---
 
 Looking forward to a great start and a curious, questioning physics mindset from all of you.  
-Welcome again to **IBDP Physics**! 🚀
+Welcome again to **IBDP Physics**! 
