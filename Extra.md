@@ -38,14 +38,19 @@ description: Extra Material.
   </div>
 </div>
 
-{% raw %}
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+  console.log('pos-vel widget script loaded');
+
   // ====== Simple Position->Velocity Simulation (JavaScript) ======
 
   // Canvas setup
   const posCanvas = document.getElementById('posCanvas');
   const velCanvas = document.getElementById('velCanvas');
+  if (!posCanvas || !velCanvas) {
+    console.error('Canvas elements not found');
+    return;
+  }
   const posCtx = posCanvas.getContext('2d');
   const velCtx = velCanvas.getContext('2d');
 
@@ -243,4 +248,3 @@ document.addEventListener('DOMContentLoaded', function () {
   resetBtn.addEventListener('click', resetAll);
 });
 </script>
-{% endraw %}
