@@ -4,7 +4,7 @@ title: Extra
 description: Extra Material.
 ---
 
-
+{% raw %}
 ## Pos - Time Graph Widget
 
 
@@ -212,4 +212,5 @@ document.addEventListener('DOMContentLoaded', function () {
   resetBtn.addEventListener('click', resetAll);
 });
 </script>
+{% endraw %}
 
