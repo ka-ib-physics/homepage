@@ -5,6 +5,9 @@ description: Extra Material.
 ---
 
 
+## Pos - Time Graph Widget
+
+
 <div class="position-velocity-sim">
   <h2>Position–Time to Velocity–Time Simulation</h2>
   <p>Draw a position–time graph in the top box (time on the x-axis, position on the y-axis). Then click <strong>Compute velocity</strong> to see the velocity–time graph below.</p>
