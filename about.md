@@ -15,7 +15,7 @@ description: >-
 https://drive.google.com/drive/folders/1mnfjJghEDVlabmmVAtcLkIGh5ThcYdKX?usp=sharing
 
 # Assignment 1 - Lecture 1 and 2 content
-* Assignment 1 tests the following concepts:
+Homework 1 tests the following concepts:
 * Position
 * Displacement
 * Velocity
