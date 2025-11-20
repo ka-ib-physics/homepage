@@ -376,7 +376,7 @@
       }
 
       // 5. Smooth velocity data to reduce spikes
-      const smoothedVelocities = smoothArray(velocities, 5); // windowSize = 5 points
+      const smoothedVelocities = smoothArray(velocities, 9); // windowSize = 5 points
 
       // 6. Draw velocity–time graph
       drawVelocityGraph(vTimes, smoothedVelocities);
