@@ -7,7 +7,6 @@ description: Extra Material.
 
 ## Pos - Time Graph Widget
 
-```html
 <script>
 document.addEventListener('DOMContentLoaded', function () {
   // ====== Simple Position->Velocity Simulation (JavaScript) ======
