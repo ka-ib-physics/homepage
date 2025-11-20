@@ -70,8 +70,9 @@
     .controls {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
+      gap: 10px;
       justify-content: center;
+      align-items: center;
       margin: 10px 0 18px;
     }
 
@@ -106,6 +107,22 @@
     button:active {
       transform: translateY(0);
       box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+    }
+
+    .slider-group {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      font-size: 0.8rem;
+      color: #374151;
+    }
+
+    .slider-group label {
+      margin-bottom: 2px;
+    }
+
+    input[type="range"] {
+      width: 180px;
     }
 
     .hint {
@@ -143,6 +160,21 @@
     <div class="controls">
       <button id="computeBtn">Compute Velocity</button>
       <button id="clearBtn" class="secondary">Clear All</button>
+
+      <div class="slider-group">
+        <label for="smoothSlider">
+          Position smoothing:
+          <span id="smoothLabel"></span>
+        </label>
+        <input
+          type="range"
+          id="smoothSlider"
+          min="0"
+          max="4"
+          step="1"
+          value="2"
+        />
+      </div>
     </div>
 
     <div class="canvas-wrapper">
@@ -169,6 +201,8 @@
 
     const computeBtn = document.getElementById("computeBtn");
     const clearBtn = document.getElementById("clearBtn");
+    const smoothSlider = document.getElementById("smoothSlider");
+    const smoothLabel = document.getElementById("smoothLabel");
 
     // We'll treat the x-axis as time from 0 to 10 seconds
     const MAX_TIME = 10;
@@ -177,16 +211,38 @@
     let posPoints = [];
     let drawing = false;
 
+    // Smoothing level from slider (0..4)
+    let smoothingLevel = parseInt(smoothSlider.value, 10);
+
+    const sgLevels = [
+      { label: "Off", window: 1 },
+      { label: "Light (5-pt)", window: 5 },
+      { label: "Medium (7-pt)", window: 7 },
+      { label: "Strong (9-pt)", window: 9 },
+      { label: "Max (11-pt)", window: 11 },
+    ];
+
+    function updateSmoothLabel() {
+      const lvl = sgLevels[smoothingLevel];
+      smoothLabel.textContent = lvl.label;
+    }
+    updateSmoothLabel();
+
+    smoothSlider.addEventListener("input", () => {
+      smoothingLevel = parseInt(smoothSlider.value, 10);
+      updateSmoothLabel();
+    });
+
     // ====== UTILS ======
     function getCanvasCoords(canvas, evt) {
       const rect = canvas.getBoundingClientRect();
       return {
         x: evt.clientX - rect.left,
-        y: evt.clientY - rect.top
+        y: evt.clientY - rect.top,
       };
     }
 
-    // Moving-average smoother
+    // Simple moving-average smoother (still used on velocity)
     function smoothArray(arr, windowSize) {
       if (arr.length <= 2 || windowSize <= 1) return arr.slice();
       const smoothed = [];
@@ -207,6 +263,59 @@
       return smoothed;
     }
 
+    // Savitzky–Golay smoothing for position (0th derivative)
+    function savitzkyGolaySmooth(data, level) {
+      const n = data.length;
+      if (n === 0) return [];
+      const cfg = sgLevels[level] || sgLevels[0];
+      const window = cfg.window;
+
+      // Level 0 -> no smoothing
+      if (window <= 1 || n < window) {
+        return data.slice();
+      }
+
+      // Precomputed SG coefficients for poly order = 2, window sizes 5,7,9,11
+      let coeffs;
+      if (window === 5) {
+        coeffs = [-0.08571429, 0.34285714, 0.48571429, 0.34285714, -0.08571429];
+      } else if (window === 7) {
+        coeffs = [-0.09523810, 0.14285714, 0.28571429, 0.33333333, 0.28571429, 0.14285714, -0.09523810];
+      } else if (window === 9) {
+        coeffs = [
+          -0.09090909, 0.06060606, 0.16883117, 0.23376623, 0.25541126,
+          0.23376623, 0.16883117, 0.06060606, -0.09090909
+        ];
+      } else if (window === 11) {
+        coeffs = [
+          -0.08391608, 0.02097902, 0.10256410, 0.16083916, 0.19580420,
+          0.20745921, 0.19580420, 0.16083916, 0.10256410, 0.02097902,
+          -0.08391608
+        ];
+      } else {
+        // Fallback: no smoothing if window is unexpected
+        return data.slice();
+      }
+
+      const half = Math.floor(window / 2);
+      const out = new Array(n);
+
+      for (let i = 0; i < n; i++) {
+        let acc = 0;
+        for (let j = 0; j < window; j++) {
+          const offset = j - half;
+          let idx = i + offset;
+          // Clamp at boundaries
+          if (idx < 0) idx = 0;
+          if (idx >= n) idx = n - 1;
+          acc += coeffs[j] * data[idx];
+        }
+        out[i] = acc;
+      }
+
+      return out;
+    }
+
     // Draw axes & grid for a given canvas/context
     function drawAxes(ctx, canvas, options = {}) {
       const w = canvas.width;
@@ -218,7 +327,7 @@
         gridColor = "#e5e7eb",
         axisColor = "#111827",
         numXGrid = 10,
-        numYGrid = 6
+        numYGrid = 6,
       } = options;
 
       ctx.save();
@@ -345,10 +454,173 @@
       const h = posCanvas.height;
 
       const times = pts.map((p) => (p.x / w) * MAX_TIME);
-      const positions = pts.map((p) => (h - p.y) / h * 10); // arbitrary 0..10 "position units"
+      const positionsRaw = pts.map((p) => (h - p.y) / h * 10); // arbitrary 0..10 units
+
+      // 3.5 Savitzky–Golay smoothing on position (before differentiation)
+      const positions = savitzkyGolaySmooth(positionsRaw, smoothingLevel);
 
       // 4. Approximate derivative using 5-point central difference (radius 2)
       const velocities = [];
       const vTimes = [];
 
       for (let i = 0; i < pts.length; i++) {
+        let v;
+
+        if (i >= 2 && i <= pts.length - 3) {
+          // 5-point stencil in the interior
+          const dtSpan = times[i + 2] - times[i - 2]; // span across ~4h
+          if (dtSpan === 0) continue;
+
+          // f'(xi) ≈ [-f(i+2) + 8f(i+1) - 8f(i-1) + f(i-2)] / (12h)
+          // with h ≈ dtSpan / 4 => denominator = 3 * dtSpan
+          const num =
+            -positions[i + 2] +
+            8 * positions[i + 1] -
+            8 * positions[i - 1] +
+            positions[i - 2];
+
+          v = num / (3 * dtSpan);
+        } else if (i === 1 || i === pts.length - 2) {
+          // 3-point central difference near boundaries
+          const dt = times[i + 1] - times[i - 1];
+          if (dt === 0) continue;
+          v = (positions[i + 1] - positions[i - 1]) / dt;
+        } else {
+          // Forward/backward difference at very ends
+          const j = i === 0 ? i : i - 1;
+          const dt = times[j + 1] - times[j];
+          if (dt === 0) continue;
+          v = (positions[j + 1] - positions[j]) / dt;
+        }
+
+        velocities.push(v);
+        vTimes.push(times[i]);
+      }
+
+      if (velocities.length < 2) {
+        alert("Not enough data to compute velocity. Try drawing a smoother, longer curve.");
+        return;
+      }
+
+      // 5. Smooth velocity data to reduce residual spikes
+      const smoothedVelocities = smoothArray(velocities, 5); // windowSize = 5 points
+
+      // 6. Draw velocity–time graph
+      drawVelocityGraph(vTimes, smoothedVelocities);
+    }
+
+    function drawVelocityGraph(times, velocities) {
+      const w = velCanvas.width;
+      const h = velCanvas.height;
+
+      // Find range of velocities
+      let minV = Math.min(...velocities);
+      let maxV = Math.max(...velocities);
+
+      // Avoid degenerate case (all same)
+      if (minV === maxV) {
+        const pad = Math.abs(minV) || 1;
+        minV -= pad;
+        maxV += pad;
+      }
+
+      const timeMax = MAX_TIME;
+
+      function tToX(t) {
+        return (t / timeMax) * (w - 60) + 40; // leave margin for y-axis
+      }
+
+      function vToY(v) {
+        const ratio = (v - minV) / (maxV - minV);
+        return h - 20 - ratio * (h - 40); // leave margins top/bottom
+      }
+
+      // Clear & axes
+      velCtx.clearRect(0, 0, w, h);
+
+      // Light grid
+      velCtx.save();
+      velCtx.lineWidth = 1;
+      velCtx.strokeStyle = "#e5e7eb";
+
+      const numXGrid = 10;
+      const numYGrid = 6;
+
+      velCtx.beginPath();
+      for (let i = 1; i < numXGrid; i++) {
+        const x = (i / numXGrid) * (w - 60) + 40;
+        velCtx.moveTo(x, 0);
+        velCtx.lineTo(x, h);
+      }
+
+      for (let j = 1; j < numYGrid; j++) {
+        const y = (j / numYGrid) * (h - 40) + 10;
+        velCtx.moveTo(0, y);
+        velCtx.lineTo(w, y);
+      }
+      velCtx.stroke();
+
+      // Axes
+      velCtx.strokeStyle = "#111827";
+
+      // y-axis
+      velCtx.beginPath();
+      velCtx.moveTo(40, 0);
+      velCtx.lineTo(40, h);
+      velCtx.stroke();
+
+      // x-axis at v=0 if in range; otherwise bottom
+      let zeroY;
+      if (minV <= 0 && maxV >= 0) {
+        zeroY = vToY(0);
+      } else {
+        zeroY = h - 20;
+      }
+      velCtx.beginPath();
+      velCtx.moveTo(0, zeroY);
+      velCtx.lineTo(w, zeroY);
+      velCtx.stroke();
+
+      // Labels (simple, numeric ticks)
+      velCtx.fillStyle = "#374151";
+      velCtx.font = "10px system-ui";
+
+      // Time labels (0, 2, 4, 6, 8, 10)
+      for (let t = 0; t <= timeMax; t += 2) {
+        const x = tToX(t);
+        velCtx.fillText(t.toString(), x - 4, h - 5);
+      }
+
+      // Velocity labels (min, mid, max)
+      const midV = (minV + maxV) / 2;
+      const vTicks = [minV, midV, maxV];
+      vTicks.forEach((v) => {
+        const y = vToY(v);
+        velCtx.fillText(v.toFixed(1), 4, y + 3);
+      });
+
+      // Plot velocity polyline
+      velCtx.lineWidth = 2;
+      velCtx.strokeStyle = "#22c55e";
+      velCtx.beginPath();
+      times.forEach((t, i) => {
+        const x = tToX(t);
+        const y = vToY(velocities[i]);
+        if (i === 0) velCtx.moveTo(x, y);
+        else velCtx.lineTo(x, y);
+      });
+      velCtx.stroke();
+
+      velCtx.restore();
+    }
+
+    // ====== BUTTON HOOKS ======
+    computeBtn.addEventListener("click", computeVelocity);
+    clearBtn.addEventListener("click", clearAll);
+
+    // ====== INITIAL DRAW ======
+    drawAxes(posCtx, posCanvas);
+    drawAxes(velCtx, velCanvas);
+  </script>
+</body>
+</html>
