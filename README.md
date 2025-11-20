@@ -13,6 +13,6 @@ Welcome to the KA IBDP Physics Homepage. This course will be used as the main co
 
 - [announcements](announcements.md),
 - a [course calendar](calendar.md),
-- [lecture notes](lectures.md),
+- [lecture notes](Lecture.md),
 - [assignments](assignments.md),
 - and a weekly [schedule](schedule.md).
