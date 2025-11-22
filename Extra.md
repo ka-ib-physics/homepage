@@ -4,6 +4,6 @@ title: Extra
 description: Extra Material.
 ---
 # Position-Time simulators
-[Run the simulation](sim.html)
+[Run the position and velocity time graphs simulation](sim.html)
 <br>
-[Run the simulation](sim2.html)
+[Run the constant velocity motion simulation](sim2.html)
