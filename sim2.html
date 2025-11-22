@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Constant Velocity Motion Widget</title>
+  <style>
+    :root {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f4f4f4;
+      color: #222;
+    }
+
+    body {
+      margin: 0;
+      padding: 1.5rem;
+      display: flex;
+      justify-content: center;
+    }
+
+    .container {
+      background: #ffffff;
+      max-width: 1000px;
+      width: 100%;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+      padding: 1.5rem 1.8rem 2rem;
+      box-sizing: border-box;
+    }
+
+    h1 {
+      font-size: 1.4rem;
+      margin-top: 0;
+      text-align: center;
+    }
+
+    .subtitle {
+      text-align: center;
+      font-size: 0.9rem;
+      color: #555;
+      margin-bottom: 1.5rem;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(260px, 320px) minmax(320px, 1fr);
+      gap: 1.5rem;
+    }
+
+    .panel {
+      border-radius: 10px;
+      border: 1px solid #e1e1e1;
+      padding: 1rem 1.1rem;
+      box-sizing: border-box;
+    }
+
+    .panel h2 {
+      font-size: 1rem;
+      margin: 0 0 0.6rem;
+    }
+
+    .controls .row {
+      margin-bottom: 0.7rem;
+    }
+
+    .controls label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.9rem;
+      margin-bottom: 0.15rem;
+    }
+
+    .controls input[type="range"] {
+      width: 100%;
+    }
+
+    .value-pill {
+      display: inline-flex;
+      gap: 0.3rem;
+      align-items: baseline;
+      padding: 0.15rem 0.5rem;
+      border-radius: 999px;
+      border: 1px solid #ddd;
+      font-size: 0.75rem;
+      background: #fafafa;
+    }
+
+    .track {
+      position: relative;
+      height: 80px;
+      margin-top: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .track-line {
+      position: absolute;
+      top: 50%;
+      left: 5%;
+      right: 5%;
+      height: 4px;
+      margin-top: -2px;
+      background: linear-gradient(90deg, #ddd 0%, #bbb 100%);
+      border-radius: 4px;
+    }
+
+    .track-endpoints {
+      position: absolute;
+      top: 50%;
+      left: 5%;
+      right: 5%;
+      display: flex;
+      justify-content: space-between;
+      transform: translateY(-140%);
+      font-size: 0.75rem;
+      color: #666;
+    }
+
+    .ball {
+      position: absolute;
+      top: 50%;
+      left: 5%;
+      transform: translate(-50%, -50%);
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, #fff, #4a90e2);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.25);
+      transition: left 0.05s linear;
+    }
+
+    .equations {
+      font-size: 0.85rem;
+      line-height: 1.4;
+      margin-top: 0.5rem;
+    }
+
+    .equations code {
+      background: #f6f6f6;
+      padding: 0.1rem 0.3rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+    }
+
+    .highlight {
+      font-weight: 600;
+    }
+
+    .graphs {
+      display: grid;
+      grid-template-rows: 1fr 1fr;
+      gap: 0.8rem;
+    }
+
+    .graph {
+      border-radius: 8px;
+      border: 1px solid #e1e1e1;
+      padding: 0.4rem 0.6rem 0.6rem;
+      position: relative;
+      background: #fafafa;
+    }
+
+    .graph-title {
+      font-size: 0.85rem;
+      margin-bottom: 0.1rem;
+    }
+
+    .axis-label {
+      position: absolute;
+      font-size: 0.7rem;
+      color: #666;
+    }
+
+    .axis-label.y {
+      left: 2px;
+      top: 50%;
+      transform: translateY(-50%) rotate(-90deg);
+      transform-origin: left center;
+    }
+
+    .axis-label.x {
+      bottom: 2px;
+      right: 10px;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100px;
+      display: block;
+    }
+
+    .explanation {
+      margin-top: 0.6rem;
+      font-size: 0.78rem;
+      color: #444;
+    }
+
+    .explanation ul {
+      padding-left: 1.2rem;
+      margin: 0.2rem 0 0;
+    }
+
+    .explanation li {
+      margin-bottom: 0.15rem;
+    }
+
+    @media (max-width: 780px) {
+      body {
+        padding: 0.8rem;
+      }
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+<div class="container">
+  <h1>Constant Velocity Motion Explorer</h1>
+  <div class="subtitle">
+    A ball moves in a straight line with constant velocity. Adjust the sliders to see how
+    <strong>time</strong>, <strong>displacement</strong>, and <strong>velocity</strong> are related.
+  </div>
+
+  <div class="layout">
+    <!-- LEFT SIDE -->
+    <div class="panel controls">
+      <h2>1. Set up the motion</h2>
+
+      <div class="row">
+        <label>
+          Initial position x₀ (m)
+          <span class="value-pill"><span id="x0Display">0</span> m</span>
+        </label>
+        <input type="range" id="x0Slider" min="-10" max="10" step="0.5" value="0">
+      </div>
+
+      <div class="row">
+        <label>
+          Constant velocity v (m/s)
+          <span class="value-pill"><span id="vDisplay">2</span> m/s</span>
+        </label>
+        <input type="range" id="vSlider" min="-5" max="5" step="0.5" value="2">
+      </div>
+
+      <div class="row">
+        <label>
+          Time t (s)
+          <span class="value-pill"><span id="tDisplay">0.0</span> s</span>
+        </label>
+        <input type="range" id="tSlider" min="0" max="10" step="0.1" value="0">
+      </div>
+
+      <div class="track">
+        <div class="track-line"></div>
+        <div class="track-endpoints">
+          <span id="minXLabel">-10 m</span>
+          <span id="maxXLabel">+10 m</span>
+        </div>
+        <div class="ball" id="ball"></div>
+      </div>
+
+      <div class="equations">
+        <div><strong>Displacement:</strong><br>
+          <code>x(t) = x₀ + v t</code>
+        </div>
+        <div style="margin-top: 0.3rem;">
+          With your values:<br>
+          <code id="equationSubstitution"></code>
+        </div>
+        <div style="margin-top: 0.3rem;">
+          Current displacement:
+          <span class="value-pill"><span id="xAtTDisplay"></span> m</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT SIDE -->
+    <div class="panel">
+      <h2>2. See graphs of the motion</h2>
+
+      <div class="graphs">
+        <div class="graph">
+          <div class="graph-title">Displacement vs Time x(t)</div>
+          <div class="axis-label y">displacement (m)</div>
+          <div class="axis-label x">time (s)</div>
+          <canvas id="xTimeCanvas" width="400" height="110"></canvas>
+        </div>
+
+        <div class="graph">
+          <div class="graph-title">Velocity vs Time v(t)</div>
+          <div class="axis-label y">velocity (m/s)</div>
+          <div class="axis-label x">time (s)</div>
+          <canvas id="vTimeCanvas" width="400" height="110"></canvas>
+        </div>
+      </div>
+
+      <div class="explanation">
+        <ul>
+          <li>The <strong>slope</strong> of the displacement–time line is the constant velocity v.</li>
+          <li>If you double the time, you double the displacement — because x ∝ t.</li>
+          <li>The velocity–time graph is a horizontal line; the v = 0 axis is centred so positive and negative velocities are clear.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Elements
+  var x0Slider = document.getElementById('x0Slider');
+  var vSlider  = document.getElementById('vSlider');
+  var tSlider  = document.getElementById('tSlider');
+
+  var x0Display = document.getElementById('x0Display');
+  var vDisplay  = document.getElementById('vDisplay');
+  var tDisplay  = document.getElementById('tDisplay');
+
+  var minXLabel = document.getElementById('minXLabel');
+  var maxXLabel = document.getElementById('maxXLabel');
+  var ball      = document.getElementById('ball');
+
+  var equationSubstitution = document.getElementById('equationSubstitution');
+  var xAtTDisplay          = document.getElementById('xAtTDisplay');
+
+  var xTimeCanvas = document.getElementById('xTimeCanvas');
+  var vTimeCanvas = document.getElementById('vTimeCanvas');
+
+  var ctxXT = xTimeCanvas.getContext('2d');
+  var ctxVT = vTimeCanvas.getContext('2d');
+
+  // Ranges
+  var T_MIN = 0;
+  var T_MAX = 10;
+  var X_MIN = -10;
+  var X_MAX = 10;
+  var V_MIN = -5;
+  var V_MAX = 5;
+
+  // Main update
+  function update() {
+    var x0 = parseFloat(x0Slider.value);
+    var v  = parseFloat(vSlider.value);
+    var t  = parseFloat(tSlider.value);
+
+    x0Display.textContent = x0.toFixed(1);
+    vDisplay.textContent  = v.toFixed(1);
+    tDisplay.textContent  = t.toFixed(1);
+
+    minXLabel.textContent = X_MIN + " m";
+    maxXLabel.textContent = X_MAX + " m";
+
+    var x = x0 + v * t;
+    xAtTDisplay.textContent = x.toFixed(2);
+
+    equationSubstitution.textContent =
+      "x(" + t.toFixed(1) + ") = " +
+      x0.toFixed(1) + " + (" +
+      v.toFixed(1) + ")·(" +
+      t.toFixed(1) + ") = " +
+      x.toFixed(2);
+
+    // Move ball along track
+    var trackLeft  = 5;
+    var trackRight = 95;
+    var clampedX   = Math.max(X_MIN, Math.min(X_MAX, x));
+    var frac       = (clampedX - X_MIN) / (X_MAX - X_MIN);
+    var leftPercent = trackLeft + frac * (trackRight - trackLeft);
+    ball.style.left = leftPercent + "%";
+
+    drawXTimeGraph(x0, v, t);
+    drawVelocityTimeGraph(v, t);
+  }
+
+  // Draw axes box and grid
+  function drawAxesBox(ctx, width, height, margin) {
+    ctx.clearRect(0, 0, width, height);
+
+    var x0   = margin.left;
+    var y0   = height - margin.bottom;
+    var xMax = width - margin.right;
+    var yMax = margin.top;
+
+    ctx.save();
+    ctx.strokeStyle = "#cccccc";
+    ctx.lineWidth = 1;
+
+    // Outer axes (L-shaped)
+    ctx.beginPath();
+    ctx.moveTo(x0, yMax);
+    ctx.lineTo(x0, y0);
+    ctx.lineTo(xMax, y0);
+    ctx.stroke();
+
+    // Grid
+    ctx.strokeStyle = "#e9e9e9";
+    ctx.lineWidth = 0.7;
+    var gridLines = 4;
+    var i, gy;
+    for (i = 1; i <= gridLines; i++) {
+      gy = y0 - i * (y0 - yMax) / gridLines;
+      ctx.beginPath();
+      ctx.moveTo(x0, gy);
+      ctx.lineTo(xMax, gy);
+      ctx.stroke();
+    }
+
+    ctx.restore();
+    return { x0: x0, y0: y0, xMax: xMax, yMax: yMax };
+  }
+
+  // Displacement-time graph
+  function drawXTimeGraph(x0Val, vVal, tCurrent) {
+    var width  = xTimeCanvas.width;
+    var height = xTimeCanvas.height;
+    var margin = { top: 10, right: 10, bottom: 18, left: 30 };
+
+    var axes = drawAxesBox(ctxXT, width, height, margin);
+    var x0   = axes.x0;
+    var y0   = axes.y0;
+    var xMax = axes.xMax;
+    var yMax = axes.yMax;
+
+    function toCanvasX(t) {
+      var frac = (t - T_MIN) / (T_MAX - T_MIN);
+      return x0 + frac * (xMax - x0);
+    }
+    function toCanvasY(x) {
+      var frac = (x - X_MIN) / (X_MAX - X_MIN);
+      return y0 - frac * (y0 - yMax);
+    }
+
+    ctxXT.save();
+
+    // t=0 axis
+    ctxXT.strokeStyle = "#999999";
+    ctxXT.lineWidth = 1;
+    var t0X = toCanvasX(0);
+    ctxXT.beginPath();
+    ctxXT.moveTo(t0X, yMax);
+    ctxXT.lineTo(t0X, y0);
+    ctxXT.stroke();
+
+    // x=0 axis
+    var x0Y = toCanvasY(0);
+    ctxXT.beginPath();
+    ctxXT.moveTo(x0, x0Y);
+    ctxXT.lineTo(xMax, x0Y);
+    ctxXT.stroke();
+
+    // x(t) line
+    var xAtTmin = x0Val + vVal * T_MIN;
+    var xAtTmax = x0Val + vVal * T_MAX;
+
+    ctxXT.strokeStyle = "#4a90e2";
+    ctxXT.lineWidth = 2;
+    ctxXT.beginPath();
+    ctxXT.moveTo(toCanvasX(T_MIN), toCanvasY(xAtTmin));
+    ctxXT.lineTo(toCanvasX(T_MAX), toCanvasY(xAtTmax));
+    ctxXT.stroke();
+
+    // current point
+    var xCurr = x0Val + vVal * tCurrent;
+    ctxXT.fillStyle = "#d0021b";
+    ctxXT.beginPath();
+    ctxXT.arc(toCanvasX(tCurrent), toCanvasY(xCurr), 4, 0, Math.PI * 2);
+    ctxXT.fill();
+
+    ctxXT.restore();
+  }
+
+  // Velocity-time graph
+  function drawVelocityTimeGraph(vVal, tCurrent) {
+    var width  = vTimeCanvas.width;
+    var height = vTimeCanvas.height;
+    var margin = { top: 10, right: 10, bottom: 18, left: 30 };
+
+    var axes = drawAxesBox(ctxVT, width, height, margin);
+    var x0   = axes.x0;
+    var y0   = axes.y0;
+    var xMax = axes.xMax;
+    var yMax = axes.yMax;
+
+    function toCanvasX(t) {
+      var frac = (t - T_MIN) / (T_MAX - T_MIN);
+      return x0 + frac * (xMax - x0);
+    }
+    function toCanvasY(v) {
+      var frac = (v - V_MIN) / (V_MAX - V_MIN);
+      return y0 - frac * (y0 - yMax);
+    }
+
+    ctxVT.save();
+
+    // t = 0 axis
+    ctxVT.strokeStyle = "#999999";
+    ctxVT.lineWidth = 1;
+    var t0X = toCanvasX(0);
+    ctxVT.beginPath();
+    ctxVT.moveTo(t0X, yMax);
+    ctxVT.lineTo(t0X, y0);
+    ctxVT.stroke();
+
+    // v = 0 axis (center)
+    var v0Y = toCanvasY(0);
+    ctxVT.beginPath();
+    ctxVT.moveTo(x0, v0Y);
+    ctxVT.lineTo(xMax, v0Y);
+    ctxVT.stroke();
+
+    // constant velocity line
+    ctxVT.strokeStyle = "#4a90e2";
+    ctxVT.lineWidth = 2;
+    ctxVT.beginPath();
+    ctxVT.moveTo(toCanvasX(T_MIN), toCanvasY(vVal));
+    ctxVT.lineTo(toCanvasX(T_MAX), toCanvasY(vVal));
+    ctxVT.stroke();
+
+    // current point
+    ctxVT.fillStyle = "#d0021b";
+    ctxVT.beginPath();
+    ctxVT.arc(toCanvasX(tCurrent), toCanvasY(vVal), 4, 0, Math.PI * 2);
+    ctxVT.fill();
+
+    ctxVT.restore();
+  }
+
+  // Slider events
+  x0Slider.oninput = update;
+  vSlider.oninput  = update;
+  tSlider.oninput  = update;
+
+  // Initial draw
+  update();
+</script>
+</body>
+</html>
