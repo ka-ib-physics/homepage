@@ -3,7 +3,6 @@ layout: page
 title: Extra
 description: Extra Material.
 ---
-# Position-Time simulator
+# Position-Time simulators
 [Run the simulation](sim.html)
-</body>
-</html>
+[Run the simulation](sim2.html)
