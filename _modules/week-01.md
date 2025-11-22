@@ -15,13 +15,16 @@ Nov 25
 : [L3 – Acceleration and constant-acceleration kinematics](#)
 
 Nov 28
-: [L4 – Net force and Newton’s laws, FBDs, and weight](#)
+: [L4 – Net force and Newton’s laws, FBDs, weight, and friction](#)
 
 Dec 2
-: [L5 – Static and kinetic friction; Introduction to energy](#)
+: [L5 –  Energy, work, and conservative forces](#)
 
 Dec 5
-: [L6 – Work and Power](#)
+: [L6 – Continued Discussion on Energy](#)
 
 Dec 9
 : [L7 – Momentum Conservation](#)
+
+
+
