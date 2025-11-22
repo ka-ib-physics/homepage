@@ -28,14 +28,13 @@ Homework 1 tests the following concepts:
   </div>
 </details>
 
-# Assignment 1 - Lecture 3 and 4 content - Due Dec 2
+# Assignment 2 - Lecture 3 and 4 content - Due Dec 2
 Homework 1 tests the following concepts:
-* Position
-* Displacement
-* Velocity
-* Speed
-* Reference Frame
-* Distance/Position/Speed/Velocity - Time plots (constant velocity only)
+* Acceleration
+* Projectile Motion
+* Forces
+* Static Equilibrium
+
 
 <details>
   <summary>Show HW 2 (click to expand)</summary>
