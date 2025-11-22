@@ -18,13 +18,13 @@ Nov 28
 : [L4 – Net force and Newton’s laws, FBDs, weight, and friction](#)
 
 Dec 2
-: [L5 –  Energy, work, and conservative forces](#)
+: [L5 –  Work, Potential Energy, Mechanical Energy, and Conservation of Energy](#)
 
 Dec 5
-: [L6 – Continued Discussion on Energy](#)
+: [L6 – Power, Efficiency, Sankey Diagrams, and Energy Density of Fuels](#)
 
 Dec 9
-: [L7 – Momentum Conservation](#)
+: [L7 – Conservation of Momentum](#)
 
 
 
