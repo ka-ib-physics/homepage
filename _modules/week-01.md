@@ -1,5 +1,5 @@
 ---
-title: IBDP Physics Lessons
+title: Fall Lessons
 ---
 
 Nov 15
@@ -18,13 +18,13 @@ Nov 28
 : [L4 – Net force and Newton’s laws, FBDs, weight, and friction](#)
 
 Dec 2
-: [L5 –  Work, Potential Energy, Mechanical Energy, and Conservation of Energy](#)
+: [Review Session 1](#)
 
 Dec 5
-: [L6 – Power, Efficiency, Sankey Diagrams, and Energy Density of Fuels](#)
+: [Review Session 2](#)
 
 Dec 9
-: [L7 – Conservation of Momentum](#)
+: [Exam](#)
 
 
 
