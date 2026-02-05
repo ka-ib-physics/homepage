@@ -7,7 +7,7 @@ Feb 7
 Feb 14
 : [**L5 – Work, Potential Energy, Mechanical Energy, and Conservation of Energy**]
 Feb 21
-: [**L7 – Conservation of Momentum+**]
+: [**L7 – Conservation of Momentum**]
 Feb 28
 : [**L8 - Rigid Body Mechanics**]
 Mar 7
@@ -17,26 +17,22 @@ Mar 14
 
 
 
-Nov 15
-: [L0 – Course Introduction and Diagnostic Exam](#)
+Feb 7
+: [**Exam 1 Review**](#)
 
-Nov 18
-: [L1 – Introduction to Kinematics at constant velocity](#)
+Feb 14
+: [**L5 – Work, Potential Energy, Mechanical Energy, and Conservation of Energy**](#)
 
-Nov 22
-: [L2 – Continued kinematics at a constant velocity](#)
+Feb 21
+: [**L7 – Conservation of Momentum**](#)
 
-Nov 25
-: [L3 – Acceleration and constant-acceleration kinematics](#)
+Feb 28
+: [**L8 - Rigid Body Mechanics**](#)
 
 Nov 28
-: [L4 – Net force and Newton’s laws, FBDs, weight, and friction](#)
+: [**Mechanics Review**](#)
 
-Dec 2
-: [Review Session 1](#)
+Mar 7
+: [**Comprehensie Mechanics Exam A1-A4 / L1-L8**](#)
 
-Dec 5
-: [Review Session 2](#)
 
-Dec 9
-: [Exam](#)
