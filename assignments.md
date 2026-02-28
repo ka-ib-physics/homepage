@@ -67,7 +67,7 @@ Homework 3 and 4 tests the following concepts:
 </details>
 
 <details>
-  <summary>Show HW 3 (click to expand)</summary>
+  <summary>Show HW 4 (click to expand)</summary>
   <div style="margin-top: 1rem;">
     <iframe
       src="/homepage/assets/pdfs/IBDP_Physics_Homework_4.pdf"
