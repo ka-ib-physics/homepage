@@ -29,7 +29,7 @@ Homework 1 tests the following concepts:
 </details>
 
 # Assignment 2 - Lecture 3 and 4 content - Due Dec 2
-Homework 1 tests the following concepts:
+Homework 2 tests the following concepts:
 * Acceleration
 * Projectile Motion
 * Forces
@@ -47,6 +47,35 @@ Homework 1 tests the following concepts:
   </div>
 </details>
 
+# Assignment 3 - Lecture 5 to 8 content - Due Dec 2
+Homework 3 and 4 tests the following concepts:
+* Energy
+* Work
+* Efficiency
+* Momentum
+
+
+<details>
+  <summary>Show HW 3 (click to expand)</summary>
+  <div style="margin-top: 1rem;">
+    <iframe
+      src="/homepage/assets/pdfs/IBDP_Physics_Homework_3.pdf"
+      width="100%"
+      height="600px">
+    </iframe>
+  </div>
+</details>
+
+<details>
+  <summary>Show HW 3 (click to expand)</summary>
+  <div style="margin-top: 1rem;">
+    <iframe
+      src="/homepage/assets/pdfs/IBDP_Physics_Homework_4.pdf"
+      width="100%"
+      height="600px">
+    </iframe>
+  </div>
+</details>
 
   
 
