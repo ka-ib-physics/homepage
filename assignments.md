@@ -47,7 +47,7 @@ Homework 2 tests the following concepts:
   </div>
 </details>
 
-# Assignment 3 - Lecture 5 to 8 content - Due Dec 2
+# Assignment 3 - Lecture 5 to 8 content - Due Mar 7
 Homework 3 and 4 tests the following concepts:
 * Energy
 * Work
