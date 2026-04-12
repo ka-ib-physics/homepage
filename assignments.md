@@ -77,5 +77,25 @@ Homework 3 and 4 tests the following concepts:
   </div>
 </details>
 
+# Assignment 4 - HW R1
+Homework R1 tests the following concepts:
+* Forces
+* Work
+* Kinematics
+
+
+<details>
+  <summary>Show HW R1 (click to expand)</summary>
+  <div style="margin-top: 1rem;">
+    <iframe
+      src="/homepage/assets/pdfs/IBDP_Review_Notes_HW_R1.pdf"
+      width="100%"
+      height="600px">
+    </iframe>
+  </div>
+</details>
+
+
+
   
 
