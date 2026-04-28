@@ -103,7 +103,7 @@ Homework R2 tests the following concepts:
 
 
 <details>
-  <summary>Show HW R1 (click to expand)</summary>
+  <summary>Show HW R2 (click to expand)</summary>
   <div style="margin-top: 1rem;">
     <iframe
       src="/homepage/assets/pdfs/IBDP_Momentum_R2_Homework.pdf"
